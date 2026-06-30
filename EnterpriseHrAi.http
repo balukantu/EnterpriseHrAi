@@ -1,0 +1,6 @@
+@EnterpriseHrAi_HostAddress = http://localhost:5006
+
+GET {{EnterpriseHrAi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

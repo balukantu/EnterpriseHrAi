@@ -1,0 +1,71 @@
+                     USER
+                       │
+                       ▼
+             ASP.NET Controller
+                       │
+                       ▼
+            AiOrchestratorService
+                       │
+         Creates ChatHistory
+         Creates Prompt
+         Registers Plugins
+         Creates Settings
+                       │
+                       ▼
+               Semantic Kernel
+                       │
+                       │
+         Builds JSON Request
+                       │
+                       ▼
+────────────────────────────────────────
+           INTERNET
+────────────────────────────────────────
+                       ▼
+                  OpenAI
+                       │
+             Reads Prompt
+             Reads History
+             Reads Tool Metadata
+                       │
+             Chooses Function
+                       │
+                       ▼
+        "Call GetLeaveBalance(2)"
+────────────────────────────────────────
+                       ▲
+                 Semantic Kernel
+                       │
+         Executes LeavePlugin
+                       │
+                 LeaveService
+                       │
+                 Repository
+                       │
+                 SQL Server
+                       │
+        Vacation =14 Sick=6
+                       │
+                       ▼
+                 Semantic Kernel
+                       │
+     Sends Tool Result to OpenAI
+                       │
+                       ▼
+                  OpenAI
+                       │
+ Creates Natural Language Response
+                       │
+                       ▼
+                 Semantic Kernel
+                       │
+                       ▼
+            AiOrchestratorService
+                       │
+         Saves Chat Messages
+                       │
+                       ▼
+                Controller
+                       │
+                       ▼
+                    USER
