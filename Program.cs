@@ -38,6 +38,9 @@ builder.Services.AddScoped<IDocumentIngestionService, DocumentIngestionService>(
 builder.Services.AddScoped<IAiInteractionLogRepository, AiInteractionLogRepository>();
 builder.Services.AddScoped<IAiInteractionLogService, AiInteractionLogService>();
 
+builder.Services.AddScoped<IPromptVersionRepository, PromptVersionRepository>();
+builder.Services.AddScoped<IPromptVersionService, PromptVersionService>();
+
 builder.Services.AddKernel()
     .AddAzureOpenAIChatCompletion(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,

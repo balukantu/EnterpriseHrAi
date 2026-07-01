@@ -21,6 +21,7 @@ public class AiOrchestratorService : IAiOrchestratorService
     private readonly IPolicySearchService _policySearchService;
     private readonly IVectorPolicySearchService _vectorPolicySearchService;
     private readonly IAiInteractionLogService _aiInteractionLogService;
+    private readonly IPromptVersionService _promptVersionService;
 
     public AiOrchestratorService(
         Kernel kernel,
@@ -31,7 +32,8 @@ public class AiOrchestratorService : IAiOrchestratorService
         IChatRepository chatRepository,
         IPromptBuilder promptBuilder,
         IVectorPolicySearchService vectorPolicySearchService,
-        IAiInteractionLogService aiInteractionLogService)
+        IAiInteractionLogService aiInteractionLogService,
+        IPromptVersionService promptVersionService)
     {
         _kernel = kernel;
         _leaveService = leaveService;
@@ -42,6 +44,7 @@ public class AiOrchestratorService : IAiOrchestratorService
         _promptBuilder = promptBuilder;
         _vectorPolicySearchService = vectorPolicySearchService;
         _aiInteractionLogService = aiInteractionLogService;
+        _promptVersionService = promptVersionService;
     }
 
     public async Task<AiChatResponseDto> ChatAsync(AiChatRequestDto request)
@@ -61,8 +64,11 @@ public class AiOrchestratorService : IAiOrchestratorService
 
         var chatHistory = new ChatHistory();
 
-        chatHistory.AddSystemMessage(
-            _promptBuilder.BuildSystemPrompt(request.EmployeeId));
+        var systemPrompt = await _promptVersionService.BuildActivePromptAsync(
+            "HR_ASSISTANT_SYSTEM_PROMPT",
+            request.EmployeeId);
+
+        chatHistory.AddSystemMessage(systemPrompt);
 
         foreach (var message in previousMessages)
         {
@@ -139,7 +145,7 @@ public class AiOrchestratorService : IAiOrchestratorService
             PluginsUsed = "Semantic Kernel Auto Function Calling",
             RetrievedDocuments = null,
             SimilarityScores = null,
-            Prompt = _promptBuilder.BuildSystemPrompt(request.EmployeeId),
+            Prompt = systemPrompt,
             AiResponse = answer,
             ModelName = "Configured OpenAI Model",
             PromptTokens = null,
