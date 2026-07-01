@@ -20,6 +20,8 @@ public class Employee
 
     public Employee? Manager { get; set; }
 
+    public string RoleName { get; set; } = "Employee";
+
     public ICollection<LeaveBalance> LeaveBalances { get; set; } = new List<LeaveBalance>();
 
     public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();

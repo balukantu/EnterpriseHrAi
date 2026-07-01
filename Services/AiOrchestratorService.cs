@@ -18,10 +18,10 @@ public class AiOrchestratorService : IAiOrchestratorService
     private readonly IPromptBuilder _promptBuilder;
     private readonly IEmployeeProfileService _employeeProfileService;
     private readonly IPayrollService _payrollService;
-    private readonly IPolicySearchService _policySearchService;
     private readonly IVectorPolicySearchService _vectorPolicySearchService;
     private readonly IAiInteractionLogService _aiInteractionLogService;
     private readonly IPromptVersionService _promptVersionService;
+    private readonly IAiAuthorizationService _aiAuthorizationService;
 
     public AiOrchestratorService(
         Kernel kernel,
@@ -33,18 +33,19 @@ public class AiOrchestratorService : IAiOrchestratorService
         IPromptBuilder promptBuilder,
         IVectorPolicySearchService vectorPolicySearchService,
         IAiInteractionLogService aiInteractionLogService,
-        IPromptVersionService promptVersionService)
+        IPromptVersionService promptVersionService,
+        IAiAuthorizationService aiAuthorizationService)
     {
         _kernel = kernel;
         _leaveService = leaveService;
         _employeeProfileService = employeeProfileService;
         _payrollService = payrollService;
-        _policySearchService = policySearchService;
         _chatRepository = chatRepository;
         _promptBuilder = promptBuilder;
         _vectorPolicySearchService = vectorPolicySearchService;
         _aiInteractionLogService = aiInteractionLogService;
         _promptVersionService = promptVersionService;
+        _aiAuthorizationService = aiAuthorizationService;
     }
 
     public async Task<AiChatResponseDto> ChatAsync(AiChatRequestDto request)
@@ -81,32 +82,44 @@ public class AiOrchestratorService : IAiOrchestratorService
 
         chatHistory.AddUserMessage(request.Message);
 
-        if (!_kernel.Plugins.Contains("LeavePlugin"))
+        if (await _aiAuthorizationService.CanUsePluginAsync(request.EmployeeId, "LeavePlugin"))
         {
-            _kernel.Plugins.AddFromObject(
-                new LeavePlugin(_leaveService),
-                pluginName: "LeavePlugin");
+            if (!_kernel.Plugins.Contains("LeavePlugin"))
+            {
+                _kernel.Plugins.AddFromObject(
+                    new LeavePlugin(_leaveService),
+                    pluginName: "LeavePlugin");
+            }
         }
 
-        if (!_kernel.Plugins.Contains("EmployeePlugin"))
+        if (await _aiAuthorizationService.CanUsePluginAsync(request.EmployeeId, "EmployeePlugin"))
         {
-            _kernel.Plugins.AddFromObject(
-                new EmployeePlugin(_employeeProfileService),
-                pluginName: "EmployeePlugin");
+            if (!_kernel.Plugins.Contains("EmployeePlugin"))
+            {
+                _kernel.Plugins.AddFromObject(
+                    new EmployeePlugin(_employeeProfileService),
+                    pluginName: "EmployeePlugin");
+            }
         }
 
-        if (!_kernel.Plugins.Contains("PayrollPlugin"))
+        if (await _aiAuthorizationService.CanUsePluginAsync(request.EmployeeId, "PayrollPlugin"))
         {
-            _kernel.Plugins.AddFromObject(
-                new PayrollPlugin(_payrollService),
-                pluginName: "PayrollPlugin");
+            if (!_kernel.Plugins.Contains("PayrollPlugin"))
+            {
+                _kernel.Plugins.AddFromObject(
+                    new PayrollPlugin(_payrollService),
+                    pluginName: "PayrollPlugin");
+            }
         }
 
-        if (!_kernel.Plugins.Contains("PolicySearchPlugin"))
+        if (await _aiAuthorizationService.CanUsePluginAsync(request.EmployeeId, "PolicySearchPlugin"))
         {
-            _kernel.Plugins.AddFromObject(
-                new PolicySearchPlugin(_policySearchService, _vectorPolicySearchService),
-                pluginName: "PolicySearchPlugin");
+            if (!_kernel.Plugins.Contains("PolicySearchPlugin"))
+            {
+                _kernel.Plugins.AddFromObject(
+                    new PolicySearchPlugin(_vectorPolicySearchService),
+                    pluginName: "PolicySearchPlugin");
+            }
         }
 
         var settings = new OpenAIPromptExecutionSettings
@@ -221,7 +234,7 @@ public class AiOrchestratorService : IAiOrchestratorService
         if (!_kernel.Plugins.Contains("PolicySearchPlugin"))
         {
             _kernel.Plugins.AddFromObject(
-                new PolicySearchPlugin(_policySearchService, _vectorPolicySearchService),
+                new PolicySearchPlugin(_vectorPolicySearchService),
                 pluginName: "PolicySearchPlugin");
         }
 
