@@ -1,0 +1,79 @@
+                Employee
+
+                    │
+
+                    ▼
+
+             Angular / React UI
+
+                    │
+
+                    ▼
+
+          ASP.NET Core Controller
+
+                    │
+
+                    ▼
+
+          AI Orchestrator Service
+
+                    │
+
+                    ▼
+
+            Semantic Kernel
+
+        ┌──────────┼───────────┐
+        │          │           │
+        ▼          ▼           ▼
+
+ Leave Plugin  Payroll Plugin Employee Plugin
+
+        │          │           │
+
+        ▼          ▼           ▼
+
+   Leave Service Payroll Service Employee Service
+
+        │          │           │
+
+        ▼          ▼           ▼
+
+     Repository Pattern
+
+              │
+
+              ▼
+
+          SQL Server
+
+
+          Policy Plugin
+
+                │
+
+                ▼
+
+         Vector Search
+
+                │
+
+                ▼
+
+       Document Chunks
+
+                │
+
+                ▼
+
+            OpenAI GPT
+
+                │
+
+                ▼
+
+         Natural Language Answer
+
+
+
