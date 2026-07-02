@@ -34,9 +34,19 @@ public class VectorPolicySearchService : IVectorPolicySearchService
 
         var questionEmbedding = await _embeddingService.GenerateEmbeddingAsync(question);
 
+        var topK = _configuration.GetValue<int>("RagSettings:TopK", 5);
+        var minimumScore = _configuration.GetValue<double>(
+            "RagSettings:MinimumSimilarityScore",
+            0.75);
+
         var results = await _repository.SearchAsync(
             questionEmbedding,
-            top: 3);
+            topK);
+
+        var filteredResults = results
+            .Where(x => x.Score >= minimumScore)
+            .OrderByDescending(x => x.Score)
+            .ToList();
 
         var cacheMinutes = _configuration.GetValue<int>(
             "CacheSettings:RagSearchCacheMinutes",
@@ -44,10 +54,10 @@ public class VectorPolicySearchService : IVectorPolicySearchService
 
         _cacheService.Set(
             cacheKey,
-            results,
+            filteredResults,
             TimeSpan.FromMinutes(cacheMinutes));
 
-        return results;
+        return filteredResults;
     }
 
     public async Task<List<int>> GenerateMissingEmbeddingsAsync()

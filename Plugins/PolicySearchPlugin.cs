@@ -21,7 +21,12 @@ public class PolicySearchPlugin
         var results = await _vectorPolicySearchService.SearchAsync(question);
 
         if (results.Count == 0)
-            return "No matching policy information found.";
+        {
+            return """
+        No matching policy information found with enough confidence.
+        Do not guess. Tell the user that no matching policy information was found.
+        """;
+        }
 
         return string.Join("\n\n", results.Select(x =>
             $"""
