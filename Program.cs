@@ -62,6 +62,8 @@ builder.Services.AddScoped<IPromptInjectionDetectionService, PromptInjectionDete
 builder.Services.AddScoped<ILlmRoutingPolicyService, LlmRoutingPolicyService>();
 builder.Services.AddScoped<ILlmRouterService, LlmRouterService>();
 
+builder.Services.AddScoped<IHrLeaveAgentService, HrLeaveAgentService>();
+
 builder.Services.AddAzureOpenAIChatCompletion(
     deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
     endpoint: builder.Configuration["AzureOpenAI:Endpoint"]!,
