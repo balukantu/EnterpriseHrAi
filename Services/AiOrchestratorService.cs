@@ -27,6 +27,7 @@ public class AiOrchestratorService : IAiOrchestratorService
     private readonly IConfiguration _configuration;
     private readonly IAiPerformanceLogService _performanceLogService;
     private readonly IAiPluginExecutionLogService _pluginLogService;
+    private readonly ILlmRouterService _llmRouterService;
 
     public AiOrchestratorService(
         Kernel kernel,
@@ -43,7 +44,8 @@ public class AiOrchestratorService : IAiOrchestratorService
         IAiCostService aiCostService,
         IConfiguration configuration,
         IAiPerformanceLogService performanceLogService,
-        IAiPluginExecutionLogService pluginLogService)
+        IAiPluginExecutionLogService pluginLogService,
+        ILlmRouterService llmRouterService)
     {
         _kernel = kernel;
         _leaveService = leaveService;
@@ -59,6 +61,7 @@ public class AiOrchestratorService : IAiOrchestratorService
         _configuration = configuration;
         _performanceLogService = performanceLogService;
         _pluginLogService = pluginLogService;
+        _llmRouterService = llmRouterService;
     }
 
     public async Task<AiChatResponseDto> ChatAsync(AiChatRequestDto request)
@@ -165,7 +168,7 @@ public class AiOrchestratorService : IAiOrchestratorService
         var chatCompletionService =
             _kernel.GetRequiredService<IChatCompletionService>();
 
-        ChatMessageContent? result = null;
+        LlmProviderResultDto? result = null;
 
         await _performanceLogService.TrackAsync(
             request.EmployeeId,
@@ -173,13 +176,15 @@ public class AiOrchestratorService : IAiOrchestratorService
             "OpenAIChatCompletion",
             async () =>
             {
-                result = await chatCompletionService.GetChatMessageContentAsync(
+                result = await _llmRouterService.GetChatResponseAsync(
+                    _kernel,
                     chatHistory,
-                    executionSettings: settings,
-                    kernel: _kernel);
+                    settings,
+                    request.Message,
+                    default);
             });
 
-        var answer = result?.Content ?? string.Empty;
+        var answer = result?.Answer ?? string.Empty;
 
         var promptText = string.Join(
             "\n",
@@ -215,7 +220,9 @@ public class AiOrchestratorService : IAiOrchestratorService
             EmployeeId = request.EmployeeId,
             ChatSessionId = session.ChatSessionId,
             UserQuestion = request.Message,
-            PluginsUsed = "Semantic Kernel Auto Function Calling",
+            PluginsUsed = result.UsedFallback
+        ? "Semantic Kernel Auto Function Calling; Fallback LLM Used"
+        : "Semantic Kernel Auto Function Calling",
             RetrievedDocuments = null,
             SimilarityScores = null,
             Prompt = systemPrompt,

@@ -59,12 +59,20 @@ builder.Services.AddScoped<IAiPluginExecutionLogService, AiPluginExecutionLogSer
 
 builder.Services.AddScoped<IPromptInjectionDetectionService, PromptInjectionDetectionService>();
 
-builder.Services.AddKernel()
-    .AddAzureOpenAIChatCompletion(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endpoint: builder.Configuration["AzureOpenAI:Endpoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-    );
+builder.Services.AddScoped<ILlmRoutingPolicyService, LlmRoutingPolicyService>();
+builder.Services.AddScoped<ILlmRouterService, LlmRouterService>();
+
+builder.Services.AddAzureOpenAIChatCompletion(
+    deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+    endpoint: builder.Configuration["AzureOpenAI:Endpoint"]!,
+    apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!,
+    modelId: builder.Configuration["AzureOpenAI:ModelId"],
+    serviceId: "azure-openai-chat");
+
+builder.Services.AddOpenAIChatCompletion(
+    modelId: builder.Configuration["OpenAI:ModelId"]!,
+    apiKey: builder.Configuration["OpenAI:ApiKey"]!,
+    serviceId: "openai-chat");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
