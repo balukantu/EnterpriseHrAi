@@ -64,6 +64,15 @@ builder.Services.AddScoped<ILlmRouterService, LlmRouterService>();
 
 builder.Services.AddScoped<IHrLeaveAgentService, HrLeaveAgentService>();
 
+builder.Services.AddScoped<IAiAgentRouterService, AiAgentRouterService>();
+
+builder.Services.AddScoped<LeaveAgent>();
+builder.Services.AddScoped<PayrollAgent>();
+builder.Services.AddScoped<PolicyAgent>();
+builder.Services.AddScoped<EmployeeProfileAgent>();
+
+builder.Services.AddScoped<IMultiAgentOrchestratorService, MultiAgentOrchestratorService>();
+
 builder.Services.AddAzureOpenAIChatCompletion(
     deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
     endpoint: builder.Configuration["AzureOpenAI:Endpoint"]!,
