@@ -1,0 +1,38 @@
+{
+  "Logging": {
+	"LogLevel": {
+	  "Default": "Information",
+	  "Microsoft.AspNetCore": "Warning"
+	}
+  },
+  "ConnectionStrings": {
+	"DefaultConnection": "Server=localhost;Database=HR_AI;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "AzureOpenAI": {
+	"Endpoint": "https://your-resource.openai.azure.com/",
+	"ApiKey": "your-api-key-here",
+	"DeploymentName": "gpt-5.4",
+	"EmbeddingModelId": "text-embedding-3-small"
+  },
+  "CacheSettings": {
+	"RagSearchCacheMinutes": 30
+  },
+  "AiCostSettings": {
+	"InputCostPerMillionTokens": 0.15,
+	"OutputCostPerMillionTokens": 0.60
+  },
+  "RagSettings": {
+	"TopK": 5,
+	"MinimumSimilarityScore": 0.75
+  },
+  "AzureBlobStorage": {
+	"ConnectionString": "your-connection-string-here",
+	"ContainerName": "hr-documents"
+  },
+  "AzureAiSearch": {
+	"Endpoint": "https://your-search-service.search.windows.net",
+	"ApiKey": "your-api-key-here",
+	"IndexName": "hr-policy-index"
+  },
+  "AllowedHosts": "*"
+}
