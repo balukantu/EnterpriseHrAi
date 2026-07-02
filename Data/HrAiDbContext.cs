@@ -21,6 +21,7 @@ public class HrAiDbContext : DbContext
     public DbSet<DocumentChunk> DocumentChunks => Set<DocumentChunk>();
     public DbSet<AiInteractionLog> AiInteractionLogs => Set<AiInteractionLog>();
     public DbSet<PromptVersion> PromptVersions => Set<PromptVersion>();
+    public DbSet<AiPerformanceLog> AiPerformanceLogs => Set<AiPerformanceLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

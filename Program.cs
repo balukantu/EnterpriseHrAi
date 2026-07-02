@@ -48,6 +48,9 @@ builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 
 builder.Services.AddScoped<IAiCostService, AiCostService>();
 
+builder.Services.AddScoped<IAiPerformanceLogRepository, AiPerformanceLogRepository>();
+builder.Services.AddScoped<IAiPerformanceLogService, AiPerformanceLogService>();
+
 builder.Services.AddKernel()
     .AddAzureOpenAIChatCompletion(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,

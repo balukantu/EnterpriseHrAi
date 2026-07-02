@@ -1,4 +1,5 @@
 ﻿using HrAi.Api.Dtos;
+using HrAi.Api.Models;
 using HrAi.Api.Plugins;
 using HrAi.Api.Repositories;
 using Microsoft.SemanticKernel;
@@ -24,6 +25,7 @@ public class AiOrchestratorService : IAiOrchestratorService
     private readonly IAiAuthorizationService _aiAuthorizationService;
     private readonly IAiCostService _aiCostService;
     private readonly IConfiguration _configuration;
+    private readonly IAiPerformanceLogService _performanceLogService;
 
     public AiOrchestratorService(
         Kernel kernel,
@@ -38,7 +40,8 @@ public class AiOrchestratorService : IAiOrchestratorService
         IPromptVersionService promptVersionService,
         IAiAuthorizationService aiAuthorizationService,
         IAiCostService aiCostService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IAiPerformanceLogService performanceLogService)
     {
         _kernel = kernel;
         _leaveService = leaveService;
@@ -52,28 +55,51 @@ public class AiOrchestratorService : IAiOrchestratorService
         _aiAuthorizationService = aiAuthorizationService;
         _aiCostService = aiCostService;
         _configuration = configuration;
+        _performanceLogService = performanceLogService;
     }
 
     public async Task<AiChatResponseDto> ChatAsync(AiChatRequestDto request)
     {
         var stopwatch = Stopwatch.StartNew();
 
-        if (string.IsNullOrWhiteSpace(request.Message))
-            throw new ArgumentException("Message is required.");
+        ChatSession? session = null;
+        List<ChatMessage> previousMessages = new();
+        string systemPrompt = string.Empty;
 
-        var session = await _chatRepository.GetOrCreateSessionAsync(
-            request.ChatSessionId,
-            request.EmployeeId);
+        await _performanceLogService.TrackAsync(
+            request.EmployeeId,
+            null,
+            "GetOrCreateChatSession",
+            async () =>
+            {
+                session = await _chatRepository.GetOrCreateSessionAsync(
+                    request.ChatSessionId,
+                    request.EmployeeId);
+            });
 
-        var previousMessages = await _chatRepository.GetRecentMessagesAsync(
+        await _performanceLogService.TrackAsync(
+            request.EmployeeId,
+            session!.ChatSessionId,
+            "LoadChatHistory",
+            async () =>
+            {
+                previousMessages = await _chatRepository.GetRecentMessagesAsync(
+                    session.ChatSessionId,
+                    10);
+            });
+
+        await _performanceLogService.TrackAsync(
+            request.EmployeeId,
             session.ChatSessionId,
-            10);
+            "BuildSystemPrompt",
+            async () =>
+            {
+                systemPrompt = await _promptVersionService.BuildActivePromptAsync(
+                    "HR_ASSISTANT_SYSTEM_PROMPT",
+                    request.EmployeeId);
+            });
 
         var chatHistory = new ChatHistory();
-
-        var systemPrompt = await _promptVersionService.BuildActivePromptAsync(
-            "HR_ASSISTANT_SYSTEM_PROMPT",
-            request.EmployeeId);
 
         chatHistory.AddSystemMessage(systemPrompt);
 
@@ -136,12 +162,21 @@ public class AiOrchestratorService : IAiOrchestratorService
         var chatCompletionService =
             _kernel.GetRequiredService<IChatCompletionService>();
 
-        var result = await chatCompletionService.GetChatMessageContentAsync(
-            chatHistory,
-            executionSettings: settings,
-            kernel: _kernel);
+        ChatMessageContent? result = null;
 
-        var answer = result.Content ?? string.Empty;
+        await _performanceLogService.TrackAsync(
+            request.EmployeeId,
+            session.ChatSessionId,
+            "OpenAIChatCompletion",
+            async () =>
+            {
+                result = await chatCompletionService.GetChatMessageContentAsync(
+                    chatHistory,
+                    executionSettings: settings,
+                    kernel: _kernel);
+            });
+
+        var answer = result?.Content ?? string.Empty;
 
         var promptText = string.Join(
             "\n",
