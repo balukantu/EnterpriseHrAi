@@ -1,0 +1,74 @@
+                Upload PDF
+
+                     │
+
+                     ▼
+
+           Azure Blob Storage
+        (Original LeavePolicy.pdf)
+
+                     │
+
+         Background Processing
+
+                     ▼
+
+            Extract Text
+
+                     ▼
+
+              Split into Chunks
+
+                     ▼
+
+        Generate Embedding for Each Chunk
+
+                     ▼
+
+        Azure AI Search Index
+
+------------------------------------------------
+
+Chunk 1
+"15 vacation days"
+Embedding: [0.23...]
+
+Chunk 2
+"10 sick days"
+Embedding: [0.88...]
+
+Chunk 3
+"Remote work 3 days"
+Embedding: [0.11...]
+
+------------------------------------------------
+
+                     ▲
+
+          Employee asks question
+
+        "Can I work from home?"
+
+                     ▼
+
+      Generate Question Embedding
+
+                     ▼
+
+      Azure AI Search compares vectors
+
+                     ▼
+
+Returns Chunk 3
+
+                     ▼
+
+          PolicySearchPlugin
+
+                     ▼
+
+               OpenAI
+
+                     ▼
+
+Final Answer
