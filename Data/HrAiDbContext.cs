@@ -22,6 +22,7 @@ public class HrAiDbContext : DbContext
     public DbSet<AiInteractionLog> AiInteractionLogs => Set<AiInteractionLog>();
     public DbSet<PromptVersion> PromptVersions => Set<PromptVersion>();
     public DbSet<AiPerformanceLog> AiPerformanceLogs => Set<AiPerformanceLog>();
+    public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,5 +78,10 @@ public class HrAiDbContext : DbContext
 
         modelBuilder.Entity<DocumentChunk>()
             .HasIndex(x => x.DocumentId);
+
+        modelBuilder.Entity<AiFeedback>()
+    .HasOne(x => x.AiInteractionLog)
+    .WithMany()
+    .HasForeignKey(x => x.LogId);
     }
 }
