@@ -33,4 +33,6 @@
     public string? ErrorMessage { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public decimal? EstimatedCost { get; set; }
 }

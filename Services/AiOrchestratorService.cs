@@ -22,6 +22,8 @@ public class AiOrchestratorService : IAiOrchestratorService
     private readonly IAiInteractionLogService _aiInteractionLogService;
     private readonly IPromptVersionService _promptVersionService;
     private readonly IAiAuthorizationService _aiAuthorizationService;
+    private readonly IAiCostService _aiCostService;
+    private readonly IConfiguration _configuration;
 
     public AiOrchestratorService(
         Kernel kernel,
@@ -34,7 +36,9 @@ public class AiOrchestratorService : IAiOrchestratorService
         IVectorPolicySearchService vectorPolicySearchService,
         IAiInteractionLogService aiInteractionLogService,
         IPromptVersionService promptVersionService,
-        IAiAuthorizationService aiAuthorizationService)
+        IAiAuthorizationService aiAuthorizationService,
+        IAiCostService aiCostService,
+        IConfiguration configuration)
     {
         _kernel = kernel;
         _leaveService = leaveService;
@@ -46,6 +50,8 @@ public class AiOrchestratorService : IAiOrchestratorService
         _aiInteractionLogService = aiInteractionLogService;
         _promptVersionService = promptVersionService;
         _aiAuthorizationService = aiAuthorizationService;
+        _aiCostService = aiCostService;
+        _configuration = configuration;
     }
 
     public async Task<AiChatResponseDto> ChatAsync(AiChatRequestDto request)
@@ -137,6 +143,20 @@ public class AiOrchestratorService : IAiOrchestratorService
 
         var answer = result.Content ?? string.Empty;
 
+        var promptText = string.Join(
+            "\n",
+            chatHistory
+                .Where(x => !string.IsNullOrWhiteSpace(x.Content))
+                .Select(x => x.Content));
+
+        var promptTokens = _aiCostService.EstimateTokens(promptText);
+        var completionTokens = _aiCostService.EstimateTokens(answer);
+        var totalTokens = promptTokens + completionTokens;
+
+        var estimatedCost = _aiCostService.CalculateCost(
+            promptTokens,
+            completionTokens);
+
         await _chatRepository.AddMessageAsync(
             session.ChatSessionId,
             "user",
@@ -160,10 +180,11 @@ public class AiOrchestratorService : IAiOrchestratorService
             SimilarityScores = null,
             Prompt = systemPrompt,
             AiResponse = answer,
-            ModelName = "Configured OpenAI Model",
-            PromptTokens = null,
-            CompletionTokens = null,
-            TotalTokens = null,
+            ModelName = _configuration["OpenAI:ModelId"],
+            PromptTokens = promptTokens,
+            CompletionTokens = completionTokens,
+            TotalTokens = totalTokens,
+            EstimatedCost = estimatedCost,
             ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds,
             Status = "Success",
             ErrorMessage = null,
