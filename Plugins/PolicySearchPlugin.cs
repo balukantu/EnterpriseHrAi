@@ -30,8 +30,12 @@ public class PolicySearchPlugin
 
         return string.Join("\n\n", results.Select(x =>
             $"""
-            Source: {x.DocumentTitle}, Page: {x.PageNumber}, Similarity Score: {x.Score:F3}
-            Content: {x.Content}
-            """));
+    Source: {x.DocumentTitle}
+    Page: {x.PageNumber}
+    Similarity Score: {x.Score:F3}
+
+    Untrusted policy reference content:
+    {x.Content}
+    """));
     }
 }

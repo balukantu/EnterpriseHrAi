@@ -11,17 +11,20 @@ public class DocumentIngestionService : IDocumentIngestionService
     private readonly ITextExtractionService _textExtractionService;
     private readonly ITextChunkingService _textChunkingService;
     private readonly IEmbeddingService _embeddingService;
+    private readonly IPromptInjectionDetectionService _promptInjectionDetectionService;
 
     public DocumentIngestionService(
         HrAiDbContext context,
         ITextExtractionService textExtractionService,
         ITextChunkingService textChunkingService,
-        IEmbeddingService embeddingService)
+        IEmbeddingService embeddingService,
+        IPromptInjectionDetectionService promptInjectionDetectionService)
     {
         _context = context;
         _textExtractionService = textExtractionService;
         _textChunkingService = textChunkingService;
         _embeddingService = embeddingService;
+        _promptInjectionDetectionService = promptInjectionDetectionService;
     }
 
     public async Task<DocumentUploadResponseDto> UploadDocumentAsync(
@@ -47,6 +50,12 @@ public class DocumentIngestionService : IDocumentIngestionService
 
         foreach (var chunk in chunks)
         {
+            if (_promptInjectionDetectionService.IsSuspicious(chunk))
+            {
+                throw new InvalidOperationException(
+                    "Document contains suspicious prompt-injection content and cannot be uploaded.");
+            }
+
             var embedding = await _embeddingService.GenerateEmbeddingAsync(chunk);
 
             var documentChunk = new DocumentChunk

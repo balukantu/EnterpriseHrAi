@@ -57,6 +57,8 @@ builder.Services.AddScoped<IAiEvaluationService, AiEvaluationService>();
 builder.Services.AddScoped<IAiPluginExecutionLogRepository, AiPluginExecutionLogRepository>();
 builder.Services.AddScoped<IAiPluginExecutionLogService, AiPluginExecutionLogService>();
 
+builder.Services.AddScoped<IPromptInjectionDetectionService, PromptInjectionDetectionService>();
+
 builder.Services.AddKernel()
     .AddAzureOpenAIChatCompletion(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
