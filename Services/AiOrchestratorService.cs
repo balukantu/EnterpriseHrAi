@@ -204,6 +204,8 @@ public class AiOrchestratorService : IAiOrchestratorService
 
         stopwatch.Stop();
 
+        var logId = Guid.NewGuid();
+
         await _aiInteractionLogService.SaveAsync(new AiInteractionLog
         {
             LogId = Guid.NewGuid(),
@@ -229,7 +231,10 @@ public class AiOrchestratorService : IAiOrchestratorService
         return new AiChatResponseDto
         {
             ChatSessionId = session.ChatSessionId,
-            Answer = answer
+            LogId = logId,
+            Answer = answer,
+            ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds,
+            ModelName = _configuration["OpenAI:ModelId"]
         };
     }
 
