@@ -25,6 +25,7 @@ public class HrAiDbContext : DbContext
     public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
     public DbSet<AiEvaluationTestCase> AiEvaluationTestCases => Set<AiEvaluationTestCase>();
     public DbSet<AiEvaluationResult> AiEvaluationResults => Set<AiEvaluationResult>();
+    public DbSet<AiPluginExecutionLog> AiPluginExecutionLogs => Set<AiPluginExecutionLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +83,11 @@ public class HrAiDbContext : DbContext
             .HasIndex(x => x.DocumentId);
 
         modelBuilder.Entity<AiFeedback>()
+    .HasOne(x => x.AiInteractionLog)
+    .WithMany()
+    .HasForeignKey(x => x.LogId);
+
+        modelBuilder.Entity<AiPluginExecutionLog>()
     .HasOne(x => x.AiInteractionLog)
     .WithMany()
     .HasForeignKey(x => x.LogId);

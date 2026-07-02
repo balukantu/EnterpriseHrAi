@@ -1,17 +1,20 @@
-﻿using System.ComponentModel;
-using HrAi.Api.Dtos;
+﻿using HrAi.Api.Dtos;
+using HrAi.Api.Models;
 using HrAi.Api.Services;
 using Microsoft.SemanticKernel;
+using System.ComponentModel;
 
 namespace HrAi.Api.Plugins;
 
 public class LeavePlugin
 {
     private readonly ILeaveService _leaveService;
+    private readonly IAiPluginExecutionLogService _pluginLogService;
 
-    public LeavePlugin(ILeaveService leaveService)
+    public LeavePlugin(ILeaveService leaveService, IAiPluginExecutionLogService pluginLogService)
     {
         _leaveService = leaveService;
+        _pluginLogService = pluginLogService;
     }
 
     [KernelFunction]
@@ -19,13 +22,32 @@ public class LeavePlugin
     public async Task<string> GetLeaveBalanceAsync(
         [Description("The employee ID of the logged-in employee.")] int employeeId)
     {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         var balances = await _leaveService.GetLeaveBalancesAsync(employeeId);
 
         if (balances == null || balances.Count == 0)
             return $"No leave balance found for employee id {employeeId}.";
 
-        return string.Join(Environment.NewLine,
+        stopwatch.Stop();
+
+        var result = string.Join(Environment.NewLine,
             balances.Select(x => $"{x.LeaveType}: {x.BalanceDays} days"));
+
+        await _pluginLogService.SaveAsync(new AiPluginExecutionLog
+        {
+            PluginExecutionLogId = Guid.NewGuid(),
+            EmployeeId = employeeId,
+            PluginName = "LeavePlugin",
+            FunctionName = "GetLeaveBalanceAsync",
+            InputJson = $"{{\"employeeId\":{employeeId}}}",
+            OutputText = result,
+            DurationMs = (int)stopwatch.ElapsedMilliseconds,
+            Status = "Success",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        return result;
     }
 
     [KernelFunction]

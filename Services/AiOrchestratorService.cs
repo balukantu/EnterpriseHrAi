@@ -26,6 +26,7 @@ public class AiOrchestratorService : IAiOrchestratorService
     private readonly IAiCostService _aiCostService;
     private readonly IConfiguration _configuration;
     private readonly IAiPerformanceLogService _performanceLogService;
+    private readonly IAiPluginExecutionLogService _pluginLogService;
 
     public AiOrchestratorService(
         Kernel kernel,
@@ -41,7 +42,8 @@ public class AiOrchestratorService : IAiOrchestratorService
         IAiAuthorizationService aiAuthorizationService,
         IAiCostService aiCostService,
         IConfiguration configuration,
-        IAiPerformanceLogService performanceLogService)
+        IAiPerformanceLogService performanceLogService,
+        IAiPluginExecutionLogService pluginLogService)
     {
         _kernel = kernel;
         _leaveService = leaveService;
@@ -56,6 +58,7 @@ public class AiOrchestratorService : IAiOrchestratorService
         _aiCostService = aiCostService;
         _configuration = configuration;
         _performanceLogService = performanceLogService;
+        _pluginLogService = pluginLogService;
     }
 
     public async Task<AiChatResponseDto> ChatAsync(AiChatRequestDto request)
@@ -119,7 +122,7 @@ public class AiOrchestratorService : IAiOrchestratorService
             if (!_kernel.Plugins.Contains("LeavePlugin"))
             {
                 _kernel.Plugins.AddFromObject(
-                    new LeavePlugin(_leaveService),
+                    new LeavePlugin(_leaveService, _pluginLogService),
                     pluginName: "LeavePlugin");
             }
         }
@@ -274,7 +277,7 @@ public class AiOrchestratorService : IAiOrchestratorService
         if (!_kernel.Plugins.Contains("LeavePlugin"))
         {
             _kernel.Plugins.AddFromObject(
-                new LeavePlugin(_leaveService),
+                new LeavePlugin(_leaveService, _pluginLogService),
                 pluginName: "LeavePlugin");
         }
 
