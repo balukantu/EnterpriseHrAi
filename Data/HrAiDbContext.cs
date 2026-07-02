@@ -23,6 +23,8 @@ public class HrAiDbContext : DbContext
     public DbSet<PromptVersion> PromptVersions => Set<PromptVersion>();
     public DbSet<AiPerformanceLog> AiPerformanceLogs => Set<AiPerformanceLog>();
     public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
+    public DbSet<AiEvaluationTestCase> AiEvaluationTestCases => Set<AiEvaluationTestCase>();
+    public DbSet<AiEvaluationResult> AiEvaluationResults => Set<AiEvaluationResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
